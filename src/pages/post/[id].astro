@@ -2,20 +2,19 @@
 import DefaultLayout from "../../layouts/DefaultLayout.astro";
 import { sizingClass } from '../../constants/index.ts';
 import type { Comment } from '../../types'
+import { getPostById, createComment } from '../../lib/apiHandlers';
+
 export const prerender = false;
 
 const { id } = Astro.params;
 const { user } = Astro.locals;
-const _post = await fetch(`${Astro.url.origin}/api/post/${id}`);
-// @ts-ignore
-const { post } = await _post.json();
+const result = await getPostById(id!);
 
-if (!post) return Astro.redirect('/404');
-
+if (!result.success || !result.post) return Astro.redirect('/404');
+const post = result.post;
 
 let error = '';
 let success = Astro.url.searchParams.get('success') || '';
-
 
 if(Astro.request.method === "POST") {
   try {
@@ -23,23 +22,17 @@ if(Astro.request.method === "POST") {
     formData.append('post_id', id!);
     formData.append('user_id', user.user_id);
 
-    const apiResponse = await fetch(`${Astro.url.origin}/api/comment`, {
-      method: "POST",
-      body: formData,
-    });
-    const apiResult = await apiResponse.json();
-    if (apiResponse.status.toString().startsWith("4")) {
-      error = apiResult.error || "Comment failed. Please try again.";
-    }
-
-    if(apiResponse.status.toString().startsWith("2")){
-        success = apiResult.message || "Your comment is posted successfully.";
-        return Astro.redirect(`/post/${id}?success=${encodeURIComponent(success)}`);
+    const result = await createComment(formData);
+    
+    if (!result.success) {
+      error = result.error || "Comment failed. Please try again.";
+    } else {
+      success = result.message || "Your comment is posted successfully.";
+      return Astro.redirect(`/post/${id}?success=${encodeURIComponent(success)}`);
     }
     
   } catch (e) {
     error = "Unexpected Error occured!";
-
   }
 }
 ---

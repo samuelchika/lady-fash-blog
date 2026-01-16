@@ -3,35 +3,41 @@ export const prerender = false;
 
 import DefaultLayout from '../layouts/DefaultLayout.astro';
 import Logo from '../assets/images/logo.png';
+import { supabase } from '../lib/supabaseClient.ts'
 
 const message = Astro.url.searchParams.get('message') || "";
 
 if (Astro.request.method === "POST") {
   const formData = await Astro.request.formData();
-  try {
-    const apiResponse = await fetch(`${Astro.url.origin}/api/login`, {
-      method: "POST",
-      body: formData,
-    });
-    const apiResult = await apiResponse.json();
-    if (apiResponse.status.toString().startsWith("4")) {
-      const error = apiResult.error || "Login failed. Please try again.";
-      return Astro.redirect(`/login?message=${encodeURIComponent(error)}`);
-    }
-    
-    if (apiResult.session) {
-      const { access_token, refresh_token } = apiResult.session;
+  const email = formData.get("email")?.toString();
+  const password = formData.get("password")?.toString();
 
+  if (!email || !password) {
+    return Astro.redirect("/login?message=Email and password are required");
+  }
+
+  try {
+    // 1. Call Supabase DIRECTLY (No internal fetch!)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return Astro.redirect(`/login?message=${encodeURIComponent(error.message)}`);
+    }
+
+    // 2. Set cookies using the session data
+    if (data.session) {
+      const { access_token, refresh_token } = data.session;
       Astro.cookies.set("sb-access-token", access_token, { path: "/", httpOnly: true, secure: true });
       Astro.cookies.set("sb-refresh-token", refresh_token, { path: "/", httpOnly: true, secure: true });
       
       return Astro.redirect("/dashboard");
     }
-    const err = "An unexpected error occurred. Please try again.";
-    return Astro.redirect(`/login?message=${encodeURIComponent(err)}`);
   } catch (err) {    
-    const error = "An unexpected error occurred. Please try again.";
-    return Astro.redirect(`/login?message=${encodeURIComponent(error)}`);
+    console.error(err);
+    return Astro.redirect("/login?message=An unexpected error occurred.");
   }
 }
 ---

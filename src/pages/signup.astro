@@ -4,6 +4,7 @@ export const prerender = false;
 import DefaultLayout from "../layouts/DefaultLayout.astro";
 import { Icon } from "astro-icon/components";
 import Logo from '../assets/images/logo.png';
+import { signUp } from '../lib/apiHandlers';
 
 const message = Astro.url.searchParams.get('message');
 let error = message || "";
@@ -12,13 +13,10 @@ if(Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
 
-    const apiResponse = await fetch(`${Astro.url.origin}/api/signup`, {
-      method: "POST",
-      body: formData,
-    });
-    const apiResult = await apiResponse.json();
-    if (apiResponse.status.toString().startsWith("4")) {
-      error = apiResult.error || "Signup failed. Please try again.";
+    const result = await signUp(formData);
+    
+    if (!result.success) {
+      error = result.error || "Signup failed. Please try again.";
       return Astro.redirect(`/signup?message=${encodeURIComponent(error)}`);
     }
     

@@ -1,11 +1,12 @@
 --- 
 import PostCard from '../post/postcard.astro';
 import { sizingClass } from '../../constants';
+import { getPosts } from '../../lib/apiHandlers';
 
 import type { BlogPost } from "../../types";
 
-const _posts = await fetch(`${Astro.url.origin}/api/posts`);
-const {posts: blogPosts} = await _posts.json();
+const result = await getPosts();
+const blogPosts = result.success ? result.posts : [];
 ---
 <section class={sizingClass}>
 	<h2 class=" text-xl lg:text-3xl font-bold mb-6">Latest Posts</h2>

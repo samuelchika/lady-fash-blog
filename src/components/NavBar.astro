@@ -34,7 +34,7 @@ const user = Astro.locals.user;
     </ul>
 
     <ul class="hidden md:flex justify-between items-center space-x-4">
-      { user ? <li><a href="/api/logout" class=" font-semibold text-black">Logout</a></li> : <>
+      { user ? <li><a href="/logout" class=" font-semibold text-black">Logout</a></li> : <>
       <li><a href="/login" class=" font-semibold text-black hover:text-pink-500">Login</a></li>
       <li><a href="/signup" class=" font-semibold text-white bg-pink-600 py-2 px-4 rounded-full hover:bg-pink-700">Sign Up</a></li>
       </> }
@@ -53,7 +53,7 @@ const user = Astro.locals.user;
       ) : null }
       <!-- <a href="/dashboard" class="text-2xl font-semibold text-black hover:text-pink-500">Dashboard</a> -->
       <hr class="w-1/2 border-gray-400" />
-      { user ? <a href="/api/logout" class="text-2xl font-semibold text-black">Logout</a> : (
+      { user ? <a href="/logout" class="text-2xl font-semibold text-black">Logout</a> : (
         <>
           <a href="/login" class="text-2xl font-semibold text-black hover:text-pink-500">Login</a>
           <a href="/signup" class="text-2xl font-semibold text-white bg-pink-600 py-3 px-10 rounded-full hover:bg-pink-700">Sign Up</a>

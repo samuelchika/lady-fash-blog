@@ -2,7 +2,7 @@
 export const prerender = false;
 import { Icon } from "astro-icon/components";
 import DashboardSidebar from "../../layouts/DashboardSidebar.astro";
-
+import { updateProfile } from '../../lib/apiHandlers';
 
 // @ts-ignore
 const user = Astro.locals.user
@@ -16,18 +16,14 @@ let success = _success || "";
 if(Astro.request.method === "POST") {
   try {
     const formData = await Astro.request.formData();
-    formData.append('user', JSON.stringify(user));
 
-    const apiResponse = await fetch(`${Astro.url.origin}/api/signup`, {
-      method: "PUT",
-      body: formData,
-    });
-    const apiResult = await apiResponse.json();
-    if (apiResponse.status.toString().startsWith("4")) {
-      error = apiResult.error || "User profile update failed. Please try again.";
+    const result = await updateProfile(formData, user);
+    
+    if (!result.success) {
+      error = result.error || "User profile update failed. Please try again.";
       return Astro.redirect(`/dashboard/settings?message=${encodeURIComponent(error)}`);
     }
-    const _success = apiResult.message || 'Profile updated successfully';
+    const _success = result.message || 'Profile updated successfully';
     return Astro.redirect(`/dashboard/settings?success=${encodeURIComponent(_success)}`);
   } catch (err) {
     error = "An unexpected error occurred. Please try again.";

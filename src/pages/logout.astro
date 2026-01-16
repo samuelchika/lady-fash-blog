@@ -1,0 +1,14 @@
+---
+export const prerender = false;
+import { logout } from '../lib/apiHandlers';
+import { supabase } from '../lib/supabaseClient';
+
+// Handle logout
+await logout();
+
+// Clear cookies
+Astro.cookies.delete("sb-access-token", { path: "/" });
+Astro.cookies.delete("sb-refresh-token", { path: "/" });
+
+// Redirect to login
+return Astro.redirect("/login");

@@ -2,6 +2,7 @@
 export const prerender = false;
 import { Icon } from "astro-icon/components"
 import DashboardSidebar from "../../layouts/DashboardSidebar.astro"
+import { createPost } from '../../lib/apiHandlers';
 
 // @ts-ignore
 const user = Astro.locals.user
@@ -14,16 +15,11 @@ if(Astro.request.method === "POST") {
   
   try {
     const formData = await Astro.request.formData();
-    formData.append('user', JSON.stringify(user));
     
-    const apiResponse = await fetch(`${Astro.url.origin}/api/posts`, {
-      method: "POST",
-      body: formData,
-    });
+    const result = await createPost(formData, user);
     
-    const apiResult = await apiResponse.json();
-    if (apiResponse.status.toString().startsWith("4")) {
-      error = apiResult.error || "Error creating Post. Please try again.";
+    if (!result.success) {
+      error = result.error || "Error creating Post. Please try again.";
       return Astro.redirect(`/dashboard/newpost?message=${encodeURIComponent(error)}`);
     }
     

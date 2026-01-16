@@ -3,14 +3,16 @@ import DashboardSidebar from "../../../../layouts/DashboardSidebar.astro";
 import { blogPosts } from '../../../../data';
 import type { BlogPost } from "../../../../types";
 import { Icon } from "astro-icon/components";
+import { getPostById, updatePost } from '../../../../lib/apiHandlers';
+
 export const prerender = false;
 
 const { id } = Astro.params;
-const _post = await fetch(`${Astro.url.origin}/api/post/${id}`);
-// @ts-ignore
-const { post } = await _post.json();
+const result = await getPostById(id!);
 
-if (!post) return Astro.redirect('/404');
+if (!result.success || !result.post) return Astro.redirect('/404');
+const post = result.post;
+
 const user = Astro.locals.user
 
 const message = Astro.url.searchParams.get('message');
@@ -20,19 +22,14 @@ if(Astro.request.method === "POST") {
   
   try {
     const formData = await Astro.request.formData();
-    formData.append('user', JSON.stringify(user));
     if(formData.get('blog_image')) {
-      formData.append('oldImage', post.image.publicUrl);
+      formData.append('old_image', post.image.publicUrl);
     }
     
-    const apiResponse = await fetch(`${Astro.url.origin}/api/post/${id}`, {
-      method: "PUT",
-      body: formData,
-    });
+    const result = await updatePost(id!, formData, user);
     
-    const apiResult = await apiResponse.json();
-    if (apiResponse.status.toString().startsWith("4")) {
-      error = apiResult.error || "Error editing post. Please try again.";
+    if (!result.success) {
+      error = result.error || "Error editing post. Please try again.";
       return Astro.redirect(`/dashboard/post/edit/${id}?message=${encodeURIComponent(error)}`);
     }
     
